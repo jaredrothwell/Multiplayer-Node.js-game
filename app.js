@@ -1,5 +1,14 @@
 
-console.log('Hello World');
-var a = 1;
-a += 1;
-console.log(a);
+console.log('Starting Server');
+
+var express = require('express');
+var app = express();
+var serv = require('http').Server(app);
+
+app.get('/', function(req, res)
+{
+	res.sendFile(__dirname + '/client/index.html');
+});
+app.use('/client', express.static(__dirname + 'client'));
+
+serv.listen(2000);
