@@ -1,29 +1,29 @@
-var Entity = function()
+class Entity 
 {
-	var self =
+	constructor()
 	{
-		x:250,
-		y:250,
-		spdX:0,
-		spdY:0,
-		id:"",
+		this.position = {x:250,y:250};
+		this.velocity ={x:0,y:0};
+		this.id = "";
 	}
-	self.update = function()
+	update()
 	{
-		self.updatePosition();
+		this.updatePosition();
 	}
-	self.updatePosition = function()
+	updatePosition()
 	{
-		self.x += self.spdX;
-		self.y += self.spdY;
+		this.position.x += this.velocity.x;
+		this.position.y += this.velocity.y;
 	}
-	self.getDistance = function(pt)
+	getDistance(point)
 	{
-		return Math.sqrt(Math.pow(self.x-pt.x,2) + Math.pow(self.y-pt.y,2));
+		return Math.sqrt(Math.pow(this.position.x-point.position.x,2) + Math.pow(this.position.y-point.position.y,2));
 	}
-	return self;
 }
+module.exports = Entity;
 
+return module.exports;
+/*
 var Player = function(id)
 {
 	var self = Entity();
@@ -156,3 +156,4 @@ Arrow.update = function()
 	}
 	return pack;
 }
+*/
