@@ -1,7 +1,9 @@
 
-require('./Entity');
+//require('./Entity');
 
 console.log('Starting Server');
+var mongojs = require("mongojs");
+var db = mongojs('localhost:27017/Game', ['account']);
 
 var express = require('express');
 var app = express();
@@ -19,6 +21,195 @@ var SOCKET_LIST = {};
 
 var DEBUG = true;
 
+var Entity = function()
+{
+	var self =
+	{
+		x:250,
+		y:250,
+		spdX:0,
+		spdY:0,
+		id:"",
+	}
+	self.update = function()
+	{
+		self.updatePosition();
+	}
+	self.updatePosition = function()
+	{
+		self.x += self.spdX;
+		self.y += self.spdY;
+	}
+	self.getDistance = function(pt)
+	{
+		return Math.sqrt(Math.pow(self.x-pt.x,2) + Math.pow(self.y-pt.y,2));
+	}
+	return self;
+}
+
+var Player = function(id)
+{
+	var self = Entity();
+	self.id = id;
+	self.number = "" + Math.floor(10 * Math.random());
+	self.keyRight = false;
+	self.keyLeft = false;
+	self.keyUp = false;
+	self.keyDown = false;
+	self.keyAttack = false;
+	self.mouseAngle = 0;
+	self.maxSpd = 3;
+
+	var super_update = self.update;
+	self.update = function()
+	{
+		self.updateSpd();
+		super_update();
+
+		if(self.keyAttack)
+		{
+			self.shootArrow(self.mouseAngle);
+		}
+	}
+
+	self.shootArrow = function(angle)
+	{
+		var a = Arrow(self.id, angle);
+		a.x = self.x;
+		a.y = self.y;
+	}
+	
+	self.updateSpd = function()
+	{
+		if(self.keyRight)
+			self.spdX += self.maxSpd;
+		else if(self.keyLeft)
+			self.spdX -= self.maxSpd;
+		else
+			self.spdX = 0;
+
+		if(self.keyup)
+			self.spdY -= self.maxSpd;
+		else if(self.keyDown)
+			self.spdY += self.maxSpd;
+		else
+			self.spdY = 0;
+	}
+	Player.list[id] = self;
+	return self;
+}
+Player.list = {};
+Player.onConnect = function(socket)
+{
+	var player = Player(socket.id);
+	socket.on('keyPress', function(data)
+	{
+		if(data.inputId === 'left')
+			player.keyLeft = data.state;
+		else if(data.inputId === 'right')
+			player.keyRight = data.state;
+		else if(data.inputId === 'up')
+			player.keyup = data.state;
+		else if(data.inputId === 'down')
+			player.keyDown = data.state;
+		else if(data.inputId === 'attack')
+			player.keyAttack = data.state;
+		else if(data.inputId === 'mouseAngle')
+			player.mouseAngle = data.state;
+	});
+}
+Player.onDisconnect = function(socket)
+{
+	delete Player.list[socket.id];
+}
+Player.update = function()
+{
+	var pack = [];
+	for(var i in Player.list)
+	{
+		var player = Player.list[i];
+		player.update();
+		pack.push({x:player.x, y:player.y, number:player.number})
+	}
+	return pack;
+}
+
+
+var Arrow = function(parent,angle)
+{
+	var self = Entity();
+	self.id = Math.random();
+	self.spdX = Math.cos(angle/180*Math.PI) * 10;
+	self.spdY = Math.sin(angle/180*Math.PI) * 10;
+	self.parent = parent;
+	self.timer = 0;
+	self.toRemove = false;
+	var super_update = self.update;
+	self.update = function()
+	{
+		if(self.timer++ > 100)
+			self.toRemove = true;
+		super_update();
+
+		for(var i in Player.list)
+		{
+			var p = Player.list[i];
+			if(self.getDistance(p) < 32 && self.parent !== p.id)
+			{
+				//handle health lose
+				self.toRemove = true;
+			}
+		}
+	}
+	Arrow.list[self.id] = self;
+	return self;
+} 
+Arrow.list = {};
+Arrow.update = function()
+{
+	var pack = [];
+	for(var i in Arrow.list)
+	{
+		var arrow = Arrow.list[i];
+		arrow.update();
+		if(arrow.toRemove)
+			delete Arrow.list[i];
+		else
+			pack.push({x:arrow.x, y:arrow.y,})
+	}
+	return pack;
+}
+
+var isValidPassword = function(data, cb)
+{
+	db.account.find({username:data.username,password:data.password}, function(error, result)
+	{
+		if(result.length > 0)
+			cb(true);
+		else
+			cb(false);
+	});
+}
+
+var usernameExists = function(data, cb)
+{
+	db.account.find({username:data.username}, function(error, result)
+	{
+		if(result.length > 0)
+			cb(true);
+		else
+			cb(false);
+	});
+}
+
+var addUser = function(data, cb)
+{
+	db.account.insert({username:data.username,password:data.password}, function(error)
+	{
+		cb();
+	});
+}
+
 var io = require('socket.io') (serv, {});
 io.sockets.on('connection', function(socket)
 {
@@ -27,7 +218,40 @@ io.sockets.on('connection', function(socket)
 	console.log('socket connection');
 	socket.emit('serverMsg', {msg:'Connected to Server',});
 
-	Player.onConnect(socket);
+	socket.on('signIn', function(data)
+	{
+		isValidPassword(data, function(result)
+		{
+			if(result)
+			{
+				Player.onConnect(socket);
+				socket.emit('signInResponse', {success:true});		
+			}
+			else
+			{
+				socket.emit('signInResponse', {success:false});
+			}
+		});
+	});
+
+	socket.on('signUp', function(data)
+	{
+		usernameExists(data, function(result)
+		{
+			if(result)
+			{
+				socket.emit('signUpResponse', {success:false});		
+			}
+			else
+			{
+				addUser(data, function()
+				{
+					socket.emit('signUpResponse', {success:true});
+				});
+			}
+		});
+	});
+
 	socket.on('disconnect', function()
 	{
 		delete SOCKET_LIST[socket.id];
