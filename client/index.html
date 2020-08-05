@@ -5,14 +5,27 @@
 	<meta charset="UTF-8">
 	<title>Dungeon Royale</title>
 </head>
+	<style>
+	#gameDiv {
+		width: 1000;
+		height: 2000;
+		margin: 0px auto;
+		border: 1px solid red;
+		padding: 100px 0;
+		text-align: center;
+		vertical-align: middle;
+		position:relative;
+	}
+</style>
+</head>
 <body>
-	<div id="signDiv">
+	<div id="signDiv" style = "text-align:center;">
 		Username: <input id="signDiv-username" type="text"></input><br>
 		Password: <input id="signDiv-password" type="password"></input>
 		<button id="signDiv-signIn">Sign In</button>
 		<button id="signDiv-signUp"> Sign Up</button>
 	</div>
-	<div id="gameDiv" style="display:none;">
+	<div id="gameDiv" style="visibility:hidden">
 		<canvas id="ctx" width="500" height="500" style="border:1px solid #000000;"></canvas> 
 
 		<div id="chat-text" style="width:500px;height:100px;overflow-y:scroll">
@@ -23,7 +36,9 @@
 			<input id="chat-input" type="text" style="width:500px"></input>
 		</form>
 	</div>
-
+	<div style="display:none;">
+		<img id="player_idle" width="80" height="80" src="client/img/player.png" alt="player">
+	</div>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
 		var socket = io();
@@ -48,7 +63,7 @@
 			if(data.success)
 			{
 				signDiv.style.display = 'none';
-				gameDiv.style.display = 'inline-block';
+				gameDiv.style.visibility = 'visible';
 			}
 			else
 			{
@@ -68,10 +83,17 @@
 		});
 
 		//game
+		var img = document.getElementById("player_idle");
+		var SCALEFACTOR = 5;
+		var WIDTH = 192 * SCALEFACTOR;
+		var HEIGHT = 112 * SCALEFACTOR;
+
 		var chatText = document.getElementById('chat-text');
 		var chatInput = document.getElementById('chat-input');
 		var chatForm = document.getElementById('chat-form');
 		var ctx = document.getElementById("ctx").getContext("2d");
+		document.getElementById("ctx").height = HEIGHT;
+		document.getElementById("ctx").width = WIDTH;
 		ctx.font = '30px Arial';
 
 		socket.on('serverMsg', function(data)
@@ -81,9 +103,9 @@
 
 		socket.on('newPositions', function(data)
 		{
-			ctx.clearRect(0,0,500,500);
+			ctx.clearRect(0,0,WIDTH,HEIGHT);
 			for(var i = 0; i < data.player.length; i++)
-				ctx.fillText(data.player[i].number, data.player[i].x, data.player[i].y);
+				ctx.drawImage(img, data.player[i].x, data.player[i].y, img.width, img.height);
 
 			for(var i = 0; i < data.arrow.length; i++)
 				ctx.fillRect(data.arrow[i].x-5, data.arrow[i].y-5, 10, 10);

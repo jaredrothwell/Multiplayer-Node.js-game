@@ -21,7 +21,7 @@ class Arrow extends Entity
 	{
 		for(var player in Players)
 		{
-			if(this.getDistance(player) < 32 && this.parent !== player.id)
+			if(this.getDistance(player) < 80 && this.parent !== player.id)
 			{
 				//handle health lose
 				this.toRemove = true;
