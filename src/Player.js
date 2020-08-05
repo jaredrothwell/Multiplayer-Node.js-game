@@ -15,6 +15,8 @@ class Player extends Entity
 		this.keyAttack = false;
 		this.mouseAngle = 0;
 		this.maxVel = 7;
+		this.direction = 'down';
+		this.isMoving = false;
 	}
 
 	update()
@@ -39,18 +41,39 @@ class Player extends Entity
 	updateVelocity()
 	{
 		if(this.keyRight)
+		{
 			this.velocity.x = this.maxVel;
-		else if(this.keyLeft)
-			this.velocity.x = -this.maxVel;
-		else
-			this.velocity.x = 0;
-
-		if(this.keyDown)
-			this.velocity.y = this.maxVel;
-		else if(this.keyUp)
-			this.velocity.y = -this.maxVel;
-		else
 			this.velocity.y = 0;
+			this.direction = 'right';
+			this.isMoving = true;
+		}
+		else if(this.keyLeft)
+		{
+			this.velocity.x = -this.maxVel;
+			this.velocity.y = 0;
+			this.direction = 'left';
+			this.isMoving = true;
+		}
+		else if(this.keyDown)
+		{
+			this.velocity.y = this.maxVel;
+			this.velocity.x = 0;
+			this.direction = 'down';
+			this.isMoving = true;
+		}
+		else if(this.keyUp)
+		{
+			this.velocity.y = -this.maxVel;
+			this.velocity.x = 0;
+			this.direction = 'up';
+			this.isMoving = true;
+		}
+		else
+		{
+			this.velocity.x = 0;
+			this.velocity.y = 0;
+			this.isMoving = false;
+		}
 	}
 }
 
@@ -86,7 +109,14 @@ Player.update = function()
 	{
 		var player = Player.list[i];
 		player.update();
-		pack.push({x:player.position.x, y:player.position.y, number:player.number})
+		pack.push(
+		{
+			x:player.position.x, 
+			y:player.position.y, 
+			number:player.number, 
+			direction:player.direction, 
+			isMoving:player.isMoving
+		})
 	}
 	return pack;
 }

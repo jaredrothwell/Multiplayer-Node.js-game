@@ -37,7 +37,14 @@
 		</form>
 	</div>
 	<div style="display:none;">
-		<img id="player_idle" width="80" height="80" src="client/img/player.png" alt="player">
+		<img id="player_down_1" width="80" height="80" src="client/img/player_down_1.png">
+		<img id="player_down_2" width="80" height="80" src="client/img/player_down_2.png">
+		<img id="player_up_1" width="80" height="80" src="client/img/player_up_1.png">
+		<img id="player_up_2" width="80" height="80" src="client/img/player_up_2.png">
+		<img id="player_right_1" width="80" height="80" src="client/img/player_right_1.png">
+		<img id="player_right_2" width="80" height="80" src="client/img/player_right_2.png">
+		<img id="player_left_1" width="80" height="80" src="client/img/player_left_1.png">
+		<img id="player_left_2" width="80" height="80" src="client/img/player_left_2.png">
 	</div>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
@@ -83,10 +90,22 @@
 		});
 
 		//game
-		var img = document.getElementById("player_idle");
+		var img1 = document.getElementById("player_down_1");
+		var img2 = document.getElementById("player_down_2");
+		var img3 = document.getElementById("player_up_1");
+		var img4 = document.getElementById("player_up_2");
+		var img5 = document.getElementById("player_right_1");
+		var img6 = document.getElementById("player_right_2");
+		var img7 = document.getElementById("player_left_1");
+		var img8 = document.getElementById("player_left_2");
 		var SCALEFACTOR = 5;
 		var WIDTH = 192 * SCALEFACTOR;
 		var HEIGHT = 112 * SCALEFACTOR;
+		var imgD = img1;
+		var imgU = img3;
+		var imgR = img5;
+		var imgL = img7;
+		var size = 80;
 
 		var chatText = document.getElementById('chat-text');
 		var chatInput = document.getElementById('chat-input');
@@ -105,7 +124,37 @@
 		{
 			ctx.clearRect(0,0,WIDTH,HEIGHT);
 			for(var i = 0; i < data.player.length; i++)
-				ctx.drawImage(img, data.player[i].x, data.player[i].y, img.width, img.height);
+			{
+				if(data.player[i].direction == 'down')
+				{
+					if(data.player[i].isMoving == true)
+						ctx.drawImage(imgD, data.player[i].x, data.player[i].y);
+					else
+						ctx.drawImage(img1, data.player[i].x, data.player[i].y);
+				}
+				else if(data.player[i].direction == 'up')
+				{
+					if(data.player[i].isMoving == true)
+						ctx.drawImage(imgU, data.player[i].x, data.player[i].y);
+					else
+						ctx.drawImage(img3, data.player[i].x, data.player[i].y);
+				}
+				else if(data.player[i].direction == 'right')
+				{
+					if(data.player[i].isMoving == true)
+						ctx.drawImage(imgR, data.player[i].x, data.player[i].y);
+					else
+						ctx.drawImage(img5, data.player[i].x, data.player[i].y);
+				}
+				else if(data.player[i].direction == 'left')
+				{
+					if(data.player[i].isMoving == true)
+						ctx.drawImage(imgL, data.player[i].x, data.player[i].y);
+					else
+						ctx.drawImage(img7, data.player[i].x, data.player[i].y);
+
+				}
+			}
 
 			for(var i = 0; i < data.arrow.length; i++)
 				ctx.fillRect(data.arrow[i].x-5, data.arrow[i].y-5, 10, 10);
@@ -172,6 +221,24 @@
 			var angle = Math.atan2(y, x) / Math.PI * 180;
 			socket.emit('keyPress', {inputId: 'mouseAngle', state:angle});
 		}
+
+		setInterval(function() 
+		{
+			if(imgD == img1)
+			{
+				imgD = img2;
+				imgU = img4;
+				imgR = img6;
+				imgL = img8;
+			}
+			else
+			{
+				imgD = img1;
+				imgU = img3;
+				imgR = img5;
+				imgL = img7;
+			}
+		}, 1000/100);
 
 	</script>
 </body>
