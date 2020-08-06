@@ -13,15 +13,26 @@ class Player extends Entity
 		this.keyUp = false;
 		this.keyDown = false;
 		this.keyAttack = false;
+		this.colx = 0;
+		this.coly = 0;
 		this.mouseAngle = 0;
 		this.maxVel = 7;
 		this.direction = 'down';
-		this.isMoving = false;
+		this.state = 'idle';
+		this.timer = 0;
+		this.health = 12;
+		this.maxHealth = 12;
 	}
 
 	update()
 	{
-		this.updateVelocity();
+		if(this.state == 'attack')
+			this.attack();
+		else if(this.playerCollision(this.maxVel) == false)
+			this.updateVelocity();
+		else
+			this.stop('idle')
+
 		super.update();
 
 		if(this.keyAttack)
@@ -37,6 +48,62 @@ class Player extends Entity
 		a.position.y = this.position.y;
 		Arrow.list[a.id] = a;
 	}
+	attack()
+	{
+		this.stop('attack')
+		if(this.timer++ > 10)
+		{
+			this.state = 'idle';
+			this.timer = 0;
+		}
+	}
+
+	playerCollision(dist)
+	{
+		if(this.keyRight)
+		{
+			this.colx = dist;
+			this.coly = 0;
+			this.direction = 'right';
+		}
+		else if(this.keyLeft)
+		{
+			this.colx = -dist;
+			this.coly = 0;
+			this.direction = 'left';
+		}
+		else if(this.keyDown)
+		{
+			this.colx = 0;
+			this.coly = dist;
+			this.direction = 'down';
+		}
+		else if(this.keyUp)
+		{
+			this.colx = 0;
+			this.coly = -dist;
+			this.direction = 'up';
+		}
+		else
+		{
+			this.colx = 0;
+			this.coly = 0;
+		}
+		for(var i in Player.list)
+		{
+			var player = Player.list[i];
+			if(this.collision(player))
+				return true;
+		}
+		return false;
+	}
+
+	collision(object)
+	{
+		if(this.checkCollision(object, this.colx, this.coly, 80, 80, 80, 80) && this.id !== object.id)
+			return true;
+		return false;
+	}
 	
 	updateVelocity()
 	{
@@ -45,35 +112,39 @@ class Player extends Entity
 			this.velocity.x = this.maxVel;
 			this.velocity.y = 0;
 			this.direction = 'right';
-			this.isMoving = true;
+			this.state = 'moving';
 		}
 		else if(this.keyLeft)
 		{
 			this.velocity.x = -this.maxVel;
 			this.velocity.y = 0;
 			this.direction = 'left';
-			this.isMoving = true;
+			this.state = 'moving';
 		}
 		else if(this.keyDown)
 		{
 			this.velocity.y = this.maxVel;
 			this.velocity.x = 0;
 			this.direction = 'down';
-			this.isMoving = true;
+			this.state = 'moving';
 		}
 		else if(this.keyUp)
 		{
 			this.velocity.y = -this.maxVel;
 			this.velocity.x = 0;
 			this.direction = 'up';
-			this.isMoving = true;
+			this.state = 'moving';
 		}
 		else
 		{
-			this.velocity.x = 0;
-			this.velocity.y = 0;
-			this.isMoving = false;
+			this.stop('idle')
 		}
+	}
+	stop(state)
+	{
+		this.velocity.x = 0;
+		this.velocity.y = 0;
+		this.state = state;
 	}
 }
 
@@ -85,17 +156,29 @@ Player.onConnect = function(socket)
 	socket.on('keyPress', function(data)
 	{
 		if(data.inputId === 'left')
+		{
 			player.keyLeft = data.state;
+		}
 		else if(data.inputId === 'right')
+		{
 			player.keyRight = data.state;
+		}
 		else if(data.inputId === 'up')
+		{
 			player.keyUp = data.state;
+		}
 		else if(data.inputId === 'down')
+		{
 			player.keyDown = data.state;
+		}
 		else if(data.inputId === 'attack')
 			player.keyAttack = data.state;
 		else if(data.inputId === 'mouseAngle')
 			player.mouseAngle = data.state;
+		else if(data.inputId === 'sword')
+		{
+			player.state = 'attack';
+		}
 	});
 }
 Player.onDisconnect = function(socket)
@@ -115,7 +198,7 @@ Player.update = function()
 			y:player.position.y, 
 			number:player.number, 
 			direction:player.direction, 
-			isMoving:player.isMoving
+			state:player.state
 		})
 	}
 	return pack;

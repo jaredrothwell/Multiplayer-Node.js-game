@@ -17,7 +17,7 @@ class Arrow extends Entity
 			this.toRemove = true;
 		super.update();
 	}
-	Collision(Players)
+	collision(Players)
 	{
 		for(var player in Players)
 		{

@@ -15,9 +15,18 @@ class Entity
 		this.position.x += this.velocity.x;
 		this.position.y += this.velocity.y;
 	}
-	getDistance(point)
+	getDistance(point, x, y)
 	{
-		return Math.sqrt(Math.pow(this.position.x-point.position.x,2) + Math.pow(this.position.y-point.position.y,2));
+		return Math.sqrt(Math.pow(this.position.x+x-point.position.x,2) + Math.pow(this.position.y+y-point.position.y,2));
+	}
+	checkCollision(point, x , y, w1, h1, w2, h2)
+	{
+		if(this.position.x+x < point.position.x + w2 &&
+			this.position.x+x + w1 > point.position.x &&
+			this.position.y+y < point.position.y + h2 &&
+			this.position.y+y + h1 > point.position.y)
+			return true;
+		return false;
 	}
 }
 module.exports = Entity;

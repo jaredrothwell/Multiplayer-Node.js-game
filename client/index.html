@@ -16,7 +16,7 @@
 		vertical-align: middle;
 		position:relative;
 	}
-</style>
+	</style>
 </head>
 <body>
 	<div id="signDiv" style = "text-align:center;">
@@ -45,6 +45,11 @@
 		<img id="player_right_2" width="80" height="80" src="client/img/player_right_2.png">
 		<img id="player_left_1" width="80" height="80" src="client/img/player_left_1.png">
 		<img id="player_left_2" width="80" height="80" src="client/img/player_left_2.png">
+
+		<img id="player_up_attack" src="client/img/player_up_attack.png">
+		<img id="player_down_attack" src="client/img/player_down_attack.png">
+		<img id="player_right_attack" src="client/img/player_right_attack.png">
+		<img id="player_left_attack" src="client/img/player_left_attack.png">
 	</div>
 	<script src="/socket.io/socket.io.js"></script>
 	<script>
@@ -98,6 +103,12 @@
 		var img6 = document.getElementById("player_right_2");
 		var img7 = document.getElementById("player_left_1");
 		var img8 = document.getElementById("player_left_2");
+
+		var imgAU = document.getElementById("player_up_attack");
+		var imgAD = document.getElementById("player_down_attack");
+		var imgAR = document.getElementById("player_right_attack");
+		var imgAL = document.getElementById("player_left_attack");
+
 		var SCALEFACTOR = 5;
 		var WIDTH = 192 * SCALEFACTOR;
 		var HEIGHT = 112 * SCALEFACTOR;
@@ -127,29 +138,37 @@
 			{
 				if(data.player[i].direction == 'down')
 				{
-					if(data.player[i].isMoving == true)
+					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgD, data.player[i].x, data.player[i].y);
+					else if(data.player[i].state == 'attack')
+						ctx.drawImage(imgAD, data.player[i].x, data.player[i].y);
 					else
 						ctx.drawImage(img1, data.player[i].x, data.player[i].y);
 				}
 				else if(data.player[i].direction == 'up')
 				{
-					if(data.player[i].isMoving == true)
+					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgU, data.player[i].x, data.player[i].y);
+					else if(data.player[i].state == 'attack')
+						ctx.drawImage(imgAU, data.player[i].x, data.player[i].y - 40);
 					else
 						ctx.drawImage(img3, data.player[i].x, data.player[i].y);
 				}
 				else if(data.player[i].direction == 'right')
 				{
-					if(data.player[i].isMoving == true)
+					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgR, data.player[i].x, data.player[i].y);
+					else if(data.player[i].state == 'attack')
+						ctx.drawImage(imgAR, data.player[i].x, data.player[i].y);
 					else
 						ctx.drawImage(img5, data.player[i].x, data.player[i].y);
 				}
 				else if(data.player[i].direction == 'left')
 				{
-					if(data.player[i].isMoving == true)
+					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgL, data.player[i].x, data.player[i].y);
+					else if(data.player[i].state == 'attack')
+						ctx.drawImage(imgAL, data.player[i].x - 40, data.player[i].y);
 					else
 						ctx.drawImage(img7, data.player[i].x, data.player[i].y);
 
@@ -204,6 +223,12 @@
 				socket.emit('keyPress', {inputId:'up', state:false});
 		}
 
+		document.onkeypress = function(event)
+		{
+			if(event.keyCode === 32)  //space
+				socket.emit('keyPress', {inputId:'sword', state:true});
+		}
+
 		document.onmousedown = function(event)
 		{
 			socket.emit('keyPress', {inputId:'attack', state:true});
@@ -238,7 +263,7 @@
 				imgR = img5;
 				imgL = img7;
 			}
-		}, 1000/100);
+		}, 1000/10);
 
 	</script>
 </body>
