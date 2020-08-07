@@ -16,12 +16,14 @@ class Player extends Entity
 		this.colx = 0;
 		this.coly = 0;
 		this.mouseAngle = 0;
-		this.maxVel = 7;
+		this.maxVel = 10;
 		this.direction = 'down';
 		this.state = 'idle';
 		this.timer = 0;
 		this.health = 12;
 		this.maxHealth = 12;
+		this.power = 1;
+		this.iFrames = 0;
 	}
 
 	update()
@@ -39,6 +41,9 @@ class Player extends Entity
 		{
 			this.shootArrow(this.mouseAngle);
 		}
+
+		if(this.iFrames-- < 0)
+			this.iFrames = 0;
 	}
 
 	shootArrow(angle)
@@ -50,11 +55,51 @@ class Player extends Entity
 	}
 	attack()
 	{
+		var dist = 40;
 		this.stop('attack')
 		if(this.timer++ > 10)
 		{
 			this.state = 'idle';
 			this.timer = 0;
+		}
+
+		if(this.direction == 'right')
+		{
+			this.colx = dist + 35;
+			this.coly = 0;
+		}
+		else if(this.direction == 'left')
+		{
+			this.colx = -dist - 30;
+			this.coly = 0;
+		}
+		else if(this.direction == 'down')
+		{
+			this.colx = 0;
+			this.coly = dist + 15;
+		}
+		else if(this.direction == 'up')
+		{
+			this.colx = 0;
+			this.coly = -dist - 20;
+		}
+		for(var i in Player.list)
+		{
+			var player = Player.list[i];
+			if(this.collision(player))
+				player.takeDamage(this.power);
+		}
+		return false;
+	}
+
+	takeDamage(damage)
+	{
+		if(this.iFrames == 0)
+		{
+			this.health -= damage;
+			this.iFrames = 20;
+			if(this.health < 0)
+				this.health = 0;
 		}
 	}
 
@@ -198,7 +243,8 @@ Player.update = function()
 			y:player.position.y, 
 			number:player.number, 
 			direction:player.direction, 
-			state:player.state
+			state:player.state,
+			health:player.health,
 		})
 	}
 	return pack;

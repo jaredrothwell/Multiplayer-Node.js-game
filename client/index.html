@@ -136,6 +136,9 @@
 			ctx.clearRect(0,0,WIDTH,HEIGHT);
 			for(var i = 0; i < data.player.length; i++)
 			{
+				ctx.fillStyle = "red";
+				ctx.font = "15px Verdana";
+				ctx.fillText("hp " + data.player[i].health,data.player[i].x + 20,data.player[i].y - 10);
 				if(data.player[i].direction == 'down')
 				{
 					if(data.player[i].state == 'moving')
@@ -150,7 +153,7 @@
 					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgU, data.player[i].x, data.player[i].y);
 					else if(data.player[i].state == 'attack')
-						ctx.drawImage(imgAU, data.player[i].x, data.player[i].y - 40);
+						ctx.drawImage(imgAU, data.player[i].x, data.player[i].y - 60);
 					else
 						ctx.drawImage(img3, data.player[i].x, data.player[i].y);
 				}
@@ -168,7 +171,7 @@
 					if(data.player[i].state == 'moving')
 						ctx.drawImage(imgL, data.player[i].x, data.player[i].y);
 					else if(data.player[i].state == 'attack')
-						ctx.drawImage(imgAL, data.player[i].x - 40, data.player[i].y);
+						ctx.drawImage(imgAL, data.player[i].x - 80, data.player[i].y);
 					else
 						ctx.drawImage(img7, data.player[i].x, data.player[i].y);
 
